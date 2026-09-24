@@ -1,12 +1,9 @@
 // =====================================================
-// SKILLSWAP FRONTEND
-// Connected to Node.js + SQLite Backend
+// SKILLSWAP - FRONTEND
+// Connected to deployed backend
 // =====================================================
 
-const API = "https://skillswap-backend-9i4k.onrender.com/api";
-
-let gigs = [];
-let bookings = [];
+const API_URL = "https://skillswap-backend-9i4k.onrender.com";
 
 
 // =====================================================
@@ -34,15 +31,15 @@ function showPage(pageId) {
     });
 
     if (pageId === "marketplace") {
-        loadGigs();
+        renderGigs();
     }
 
     if (pageId === "dashboard") {
-        loadCreatorBookings();
+        renderDashboard();
     }
 
     if (pageId === "bookings") {
-        loadClientBookings();
+        renderMyBookings();
     }
 
     window.scrollTo({
@@ -53,151 +50,142 @@ function showPage(pageId) {
 
 
 // =====================================================
-// GET ALL GIGS
+// MARKETPLACE - GET GIGS FROM BACKEND
 // =====================================================
 
-async function loadGigs() {
-
-    try {
-
-        const response = await fetch(`${API}/gigs`);
-
-        if (!response.ok) {
-            throw new Error("Failed to load gigs");
-        }
-
-        gigs = await response.json();
-
-        renderGigs();
-
-    } catch (error) {
-
-        console.error("Gigs error:", error);
-
-        document.getElementById("gigCount").textContent = "0";
-
-        document.getElementById("gigGrid").innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
-                <h3>Unable to load gigs</h3>
-                <p>Make sure the SkillSwap backend is running.</p>
-            </div>
-        `;
-    }
-}
-
-
-// =====================================================
-// DISPLAY GIGS
-// =====================================================
-
-function renderGigs() {
+async function renderGigs() {
 
     const grid = document.getElementById("gigGrid");
 
     if (!grid) return;
 
-    const searchInput = document.getElementById("searchInput");
+    try {
 
-    const categoryFilter = document.getElementById("categoryFilter");
+        const response = await fetch(`${API_URL}/api/gigs`);
 
-    const search = searchInput
-        ? searchInput.value.toLowerCase().trim()
-        : "";
+        if (!response.ok) {
+            throw new Error("Failed to load gigs");
+        }
 
-    const category = categoryFilter
-        ? categoryFilter.value
-        : "All";
+        const gigs = await response.json();
 
+        const searchInput = document.getElementById("searchInput");
+        const categoryFilter = document.getElementById("categoryFilter");
 
-    const filtered = gigs.filter(gig => {
+        const search = searchInput
+            ? searchInput.value.toLowerCase().trim()
+            : "";
 
-        const searchable =
-            `${gig.title} ${gig.description} ${gig.category} ${gig.creatorName}`
-                .toLowerCase();
-
-        const matchesSearch =
-            searchable.includes(search);
-
-        const matchesCategory =
-            category === "All" ||
-            gig.category === category;
-
-        return matchesSearch && matchesCategory;
-    });
+        const category = categoryFilter
+            ? categoryFilter.value
+            : "All";
 
 
-    document.getElementById("gigCount").textContent =
-        filtered.length;
+        const filtered = gigs.filter(gig => {
+
+            const searchable =
+                `${gig.title} ${gig.description} ${gig.category} ${gig.creatorName}`
+                    .toLowerCase();
+
+            const matchesSearch =
+                searchable.includes(search);
+
+            const matchesCategory =
+                category === "All" ||
+                gig.category === category;
+
+            return matchesSearch && matchesCategory;
+        });
 
 
-    if (filtered.length === 0) {
+        const gigCount = document.getElementById("gigCount");
+
+        if (gigCount) {
+            gigCount.textContent = filtered.length;
+        }
+
+
+        if (filtered.length === 0) {
+
+            grid.innerHTML = `
+                <div class="empty" style="grid-column:1/-1">
+                    <h3>No gigs found</h3>
+                    <p>Try another search or category.</p>
+                </div>
+            `;
+
+            return;
+        }
+
+
+        grid.innerHTML = filtered.map(gig => `
+
+            <article class="gig-card">
+
+                <div class="gig-top">
+
+                    <span class="category">
+                        ${escapeHTML(gig.category)}
+                    </span>
+
+                    <span class="gig-price">
+                        ₹${Number(gig.rate).toLocaleString()}
+                    </span>
+
+                </div>
+
+                <h3>
+                    ${escapeHTML(gig.title)}
+                </h3>
+
+                <p class="gig-description">
+                    ${escapeHTML(gig.description)}
+                </p>
+
+                <div class="creator">
+
+                    <div class="creator-avatar">
+                        ${getInitial(gig.creatorName)}
+                    </div>
+
+                    <div>
+                        <strong>
+                            ${escapeHTML(gig.creatorName)}
+                        </strong>
+
+                        <small>Creator</small>
+                    </div>
+
+                </div>
+
+                <button
+                    class="book-btn"
+                    onclick="openBooking(${gig.id})"
+                >
+                    Book this gig →
+                </button>
+
+            </article>
+
+        `).join("");
+
+
+    } catch (error) {
+
+        console.error("Failed to load gigs:", error);
 
         grid.innerHTML = `
             <div class="empty" style="grid-column:1/-1">
-                <h3>No gigs found</h3>
-                <p>Try another search or category.</p>
+                <h3>Unable to load gigs</h3>
+                <p>Please refresh the page and try again.</p>
             </div>
         `;
-
-        return;
     }
-
-
-    grid.innerHTML = filtered.map(gig => `
-
-        <article class="gig-card">
-
-            <div class="gig-top">
-
-                <span class="category">
-                    ${escapeHTML(gig.category)}
-                </span>
-
-                <span class="gig-price">
-                    ₹${Number(gig.rate).toLocaleString()}
-                </span>
-
-            </div>
-
-            <h3>
-                ${escapeHTML(gig.title)}
-            </h3>
-
-            <p class="gig-description">
-                ${escapeHTML(gig.description)}
-            </p>
-
-            <div class="creator">
-
-                <div class="creator-avatar">
-                    ${getInitial(gig.creatorName)}
-                </div>
-
-                <div>
-                    <strong>
-                        ${escapeHTML(gig.creatorName)}
-                    </strong>
-
-                    <small>Creator</small>
-                </div>
-
-            </div>
-
-            <button
-                class="book-btn"
-                onclick="openBooking(${gig.id})"
-            >
-                Book this gig →
-            </button>
-
-        </article>
-
-    `).join("");
 }
 
 
 // =====================================================
-// CREATE GIG
+// POST A GIG
 // =====================================================
 
 document
@@ -205,6 +193,7 @@ document
     .addEventListener("submit", async function(event) {
 
         event.preventDefault();
+
 
         const title =
             document.getElementById("gigTitle").value.trim();
@@ -242,22 +231,24 @@ document
 
         try {
 
-            const response = await fetch(`${API}/gigs`, {
+            const response = await fetch(
+                `${API_URL}/api/gigs`,
+                {
+                    method: "POST",
 
-                method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    title,
-                    category,
-                    rate,
-                    description,
-                    creatorName
-                })
-            });
+                    body: JSON.stringify({
+                        title,
+                        category,
+                        rate,
+                        description,
+                        creatorName
+                    })
+                }
+            );
 
 
             const data = await response.json();
@@ -266,7 +257,7 @@ document
             if (!response.ok) {
 
                 showToast(
-                    data.message || "Failed to create gig.",
+                    data.message || "Failed to publish gig.",
                     "!"
                 );
 
@@ -276,25 +267,28 @@ document
 
             this.reset();
 
+
             showToast(
                 "Your gig was published!",
                 "✓"
             );
 
 
-            await loadGigs();
-
             showPage("marketplace");
+
+            renderGigs();
+
 
         } catch (error) {
 
             console.error(error);
 
             showToast(
-                "Backend connection failed.",
+                "Unable to connect to server.",
                 "!"
             );
         }
+
     });
 
 
@@ -302,27 +296,44 @@ document
 // BOOKING MODAL
 // =====================================================
 
-function openBooking(gigId) {
+async function openBooking(gigId) {
 
-    const gig =
-        gigs.find(g => Number(g.id) === Number(gigId));
+    try {
 
-    if (!gig) return;
+        const response =
+            await fetch(`${API_URL}/api/gigs/${gigId}`);
 
+        if (!response.ok) {
+            throw new Error("Gig not found");
+        }
 
-    document.getElementById("bookingGigId").value =
-        gig.id;
-
-    document.getElementById("modalGigTitle").textContent =
-        gig.title;
-
-    document.getElementById("modalGigInfo").textContent =
-        `${gig.category} · ₹${Number(gig.rate).toLocaleString()} · by ${gig.creatorName}`;
+        const gig = await response.json();
 
 
-    document
-        .getElementById("bookingModal")
-        .classList.add("show");
+        document.getElementById("bookingGigId").value =
+            gig.id;
+
+        document.getElementById("modalGigTitle").textContent =
+            gig.title;
+
+        document.getElementById("modalGigInfo").textContent =
+            `${gig.category} · ₹${Number(gig.rate).toLocaleString()} · by ${gig.creatorName}`;
+
+
+        document
+            .getElementById("bookingModal")
+            .classList.add("show");
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Unable to open this gig.",
+            "!"
+        );
+    }
 }
 
 
@@ -370,31 +381,43 @@ document
         }
 
 
+        // Remember client name for My Bookings
+        localStorage.setItem(
+            "skillswap_clientName",
+            clientName
+        );
+
+
         try {
 
-            const response = await fetch(`${API}/bookings`, {
+            const response =
+                await fetch(
+                    `${API_URL}/api/bookings`,
+                    {
+                        method: "POST",
 
-                method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    gigId: Number(gigId),
-                    clientName,
-                    message
-                })
-            });
+                        body: JSON.stringify({
+                            gigId: Number(gigId),
+                            clientName,
+                            message
+                        })
+                    }
+                );
 
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
 
             if (!response.ok) {
 
                 showToast(
-                    data.message || "Booking failed.",
+                    data.message ||
+                    "Booking could not be created.",
                     "!"
                 );
 
@@ -411,9 +434,6 @@ document
             );
 
 
-            await loadClientBookings();
-
-
             setTimeout(() => {
                 showPage("bookings");
             }, 500);
@@ -424,10 +444,11 @@ document
             console.error(error);
 
             showToast(
-                "Backend connection failed.",
+                "Unable to connect to server.",
                 "!"
             );
         }
+
     });
 
 
@@ -435,16 +456,30 @@ document
 // CREATOR DASHBOARD
 // =====================================================
 
-async function loadCreatorBookings() {
+async function renderDashboard() {
+
+    const container =
+        document.getElementById("dashboardBookings");
+
+    if (!container) return;
+
+
+    /*
+       Your current demo creator is Anisha.
+       If the creator name changes, the backend API
+       can return bookings for that creator.
+    */
+
+    const creatorName =
+        localStorage.getItem("skillswap_creatorName") ||
+        "Anisha";
+
 
     try {
 
-        // Use the creator name that you used for your database gig.
-        const creatorName = "Anisha";
-
         const response =
             await fetch(
-                `${API}/bookings/creator/${encodeURIComponent(creatorName)}`
+                `${API_URL}/api/bookings/creator/${encodeURIComponent(creatorName)}`
             );
 
 
@@ -453,139 +488,145 @@ async function loadCreatorBookings() {
         }
 
 
-        bookings = await response.json();
+        const bookings =
+            await response.json();
 
-        renderDashboard();
+
+        const pending =
+            bookings.filter(
+                b => b.status === "Pending"
+            ).length;
+
+        const accepted =
+            bookings.filter(
+                b => b.status === "Accepted"
+            ).length;
+
+        const declined =
+            bookings.filter(
+                b => b.status === "Declined"
+            ).length;
+
+
+        document.getElementById("pendingCount").textContent =
+            pending;
+
+        document.getElementById("acceptedCount").textContent =
+            accepted;
+
+        document.getElementById("declinedCount").textContent =
+            declined;
+
+        document.getElementById("totalBookingCount").textContent =
+            bookings.length;
+
+
+        if (bookings.length === 0) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    <h3>No booking requests yet</h3>
+                    <p>
+                        When clients book your gigs,
+                        their requests will appear here.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+
+        const sorted =
+            [...bookings].sort(
+                (a, b) =>
+                    new Date(b.createdAt) -
+                    new Date(a.createdAt)
+            );
+
+
+        container.innerHTML =
+            sorted.map(booking => `
+
+                <div class="booking-card">
+
+                    <div class="booking-main">
+
+                        <h3>
+                            ${escapeHTML(booking.gigTitle)}
+                        </h3>
+
+                        <p>
+                            <strong>Client:</strong>
+                            ${escapeHTML(booking.clientName)}
+                        </p>
+
+                        <p>
+                            ${escapeHTML(
+                                booking.message ||
+                                "No message provided."
+                            )}
+                        </p>
+
+                        <p>
+                            <strong>Rate:</strong>
+                            ₹${Number(booking.rate).toLocaleString()}
+                        </p>
+
+                    </div>
+
+
+                    <div class="booking-meta">
+
+                        <span class="status ${booking.status.toLowerCase()}">
+                            ${booking.status}
+                        </span>
+
+
+                        ${
+                            booking.status === "Pending"
+                            ?
+                            `
+                            <div class="booking-actions">
+
+                                <button
+                                    class="accept-btn"
+                                    onclick="updateBooking('${booking.id}', 'Accepted')"
+                                >
+                                    ✓ Accept
+                                </button>
+
+                                <button
+                                    class="decline-btn"
+                                    onclick="updateBooking('${booking.id}', 'Declined')"
+                                >
+                                    Decline
+                                </button>
+
+                            </div>
+                            `
+                            :
+                            ""
+                        }
+
+                    </div>
+
+                </div>
+
+            `).join("");
+
 
     } catch (error) {
 
         console.error(error);
 
-        bookings = [];
-
-        renderDashboard();
-    }
-}
-
-
-function renderDashboard() {
-
-    const container =
-        document.getElementById("dashboardBookings");
-
-
-    if (!container) return;
-
-
-    const pending =
-        bookings.filter(b => b.status === "Pending").length;
-
-    const accepted =
-        bookings.filter(b => b.status === "Accepted").length;
-
-    const declined =
-        bookings.filter(b => b.status === "Declined").length;
-
-
-    document.getElementById("pendingCount").textContent =
-        pending;
-
-    document.getElementById("acceptedCount").textContent =
-        accepted;
-
-    document.getElementById("declinedCount").textContent =
-        declined;
-
-    document.getElementById("totalBookingCount").textContent =
-        bookings.length;
-
-
-    if (bookings.length === 0) {
-
         container.innerHTML = `
             <div class="empty">
-                <h3>No booking requests yet</h3>
-                <p>When clients book your gigs, requests will appear here.</p>
+                <h3>Unable to load bookings</h3>
+                <p>Please refresh the page.</p>
             </div>
         `;
-
-        return;
     }
-
-
-    container.innerHTML =
-        bookings.map(booking => `
-
-            <div class="booking-card">
-
-                <div class="booking-main">
-
-                    <h3>
-                        ${escapeHTML(booking.gigTitle)}
-                    </h3>
-
-                    <p>
-                        <strong>Client:</strong>
-                        ${escapeHTML(booking.clientName)}
-                    </p>
-
-                    <p>
-                        ${escapeHTML(
-                            booking.message ||
-                            "No message provided."
-                        )}
-                    </p>
-
-                    <p>
-                        <strong>Rate:</strong>
-                        ₹${Number(booking.rate).toLocaleString()}
-                    </p>
-
-                </div>
-
-
-                <div class="booking-meta">
-
-                    <span class="status ${booking.status.toLowerCase()}">
-                        ${booking.status}
-                    </span>
-
-
-                    ${
-                        booking.status === "Pending"
-
-                        ?
-
-                        `
-                        <div class="booking-actions">
-
-                            <button
-                                class="accept-btn"
-                                onclick="updateBooking(${booking.id}, 'Accepted')"
-                            >
-                                ✓ Accept
-                            </button>
-
-                            <button
-                                class="decline-btn"
-                                onclick="updateBooking(${booking.id}, 'Declined')"
-                            >
-                                Decline
-                            </button>
-
-                        </div>
-                        `
-
-                        :
-
-                        ""
-                    }
-
-                </div>
-
-            </div>
-
-        `).join("");
 }
 
 
@@ -595,7 +636,7 @@ function renderDashboard() {
 
 async function updateBooking(bookingId, status) {
 
-    const action =
+    const endpoint =
         status === "Accepted"
             ? "accept"
             : "decline";
@@ -605,20 +646,22 @@ async function updateBooking(bookingId, status) {
 
         const response =
             await fetch(
-                `${API}/bookings/${bookingId}/${action}`,
+                `${API_URL}/api/bookings/${bookingId}/${endpoint}`,
                 {
                     method: "PATCH"
                 }
             );
 
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
 
         if (!response.ok) {
 
             showToast(
-                data.message || "Update failed.",
+                data.message ||
+                "Unable to update booking.",
                 "!"
             );
 
@@ -626,26 +669,36 @@ async function updateBooking(bookingId, status) {
         }
 
 
-        showToast(
-            status === "Accepted"
-                ? "Booking accepted."
-                : "Booking declined.",
-            status === "Accepted"
-                ? "✓"
-                : "!"
-        );
+        if (status === "Accepted") {
+
+            showToast(
+                "Booking accepted.",
+                "✓"
+            );
+
+        } else {
+
+            showToast(
+                "Booking declined.",
+                "!"
+            );
+        }
 
 
-        await loadCreatorBookings();
+        // Refresh dashboard from backend
+        await renderDashboard();
 
-        await loadClientBookings();
+
+        // Refresh client bookings too
+        await renderMyBookings();
+
 
     } catch (error) {
 
         console.error(error);
 
         showToast(
-            "Backend connection failed.",
+            "Unable to connect to server.",
             "!"
         );
     }
@@ -653,56 +706,22 @@ async function updateBooking(bookingId, status) {
 
 
 // =====================================================
-// CLIENT BOOKINGS
+// MY BOOKINGS
 // =====================================================
 
-async function loadClientBookings() {
-
-    try {
-
-        // Demo client name.
-        // This must match the name entered while booking.
-        const clientName =
-            document.getElementById("clientName")
-                ?.value.trim() || "Client One";
-
-
-        const response =
-            await fetch(
-                `${API}/bookings/client/${encodeURIComponent(clientName)}`
-            );
-
-
-        if (!response.ok) {
-            throw new Error("Failed to load client bookings");
-        }
-
-
-        bookings = await response.json();
-
-        renderMyBookings();
-
-    } catch (error) {
-
-        console.error(error);
-
-        bookings = [];
-
-        renderMyBookings();
-    }
-}
-
-
-function renderMyBookings() {
+async function renderMyBookings() {
 
     const container =
         document.getElementById("myBookings");
 
-
     if (!container) return;
 
 
-    if (bookings.length === 0) {
+    const clientName =
+        localStorage.getItem("skillswap_clientName");
+
+
+    if (!clientName) {
 
         container.innerHTML = `
             <div class="empty">
@@ -728,61 +747,119 @@ function renderMyBookings() {
     }
 
 
-    container.innerHTML =
-        bookings.map(booking => `
+    try {
 
-            <div class="booking-card">
+        const response =
+            await fetch(
+                `${API_URL}/api/bookings/client/${encodeURIComponent(clientName)}`
+            );
 
-                <div class="booking-main">
 
-                    <h3>
-                        ${escapeHTML(booking.gigTitle)}
-                    </h3>
+        if (!response.ok) {
+            throw new Error("Failed to load client bookings");
+        }
+
+
+        const bookings =
+            await response.json();
+
+
+        if (bookings.length === 0) {
+
+            container.innerHTML = `
+                <div class="empty">
+
+                    <h3>No bookings yet</h3>
 
                     <p>
-                        Creator:
-                        <strong>
-                            ${escapeHTML(booking.creatorName)}
-                        </strong>
+                        Browse the marketplace and book a gig
+                        to see it here.
                     </p>
 
-                    <p>
-                        ₹${Number(booking.rate).toLocaleString()}
-                    </p>
+                </div>
+            `;
 
-                    ${
-                        booking.status === "Declined"
+            return;
+        }
 
-                        ?
 
-                        `
-                        <button
-                            class="browse-btn"
-                            onclick="showPage('marketplace')"
-                        >
-                            Browse other gigs →
-                        </button>
-                        `
+        const sorted =
+            [...bookings].sort(
+                (a, b) =>
+                    new Date(b.createdAt) -
+                    new Date(a.createdAt)
+            );
 
-                        :
 
-                        ""
-                    }
+        container.innerHTML =
+            sorted.map(booking => `
+
+                <div class="booking-card">
+
+                    <div class="booking-main">
+
+                        <h3>
+                            ${escapeHTML(booking.gigTitle)}
+                        </h3>
+
+                        <p>
+                            Creator:
+                            <strong>
+                                ${escapeHTML(booking.creatorName)}
+                            </strong>
+                        </p>
+
+                        <p>
+                            ₹${Number(booking.rate).toLocaleString()}
+                        </p>
+
+                        ${
+                            booking.status === "Declined"
+                            ?
+                            `
+                            <button
+                                class="browse-btn"
+                                onclick="showPage('marketplace')"
+                            >
+                                Browse other gigs →
+                            </button>
+                            `
+                            :
+                            ""
+                        }
+
+                    </div>
+
+
+                    <div class="booking-meta">
+
+                        <span class="status ${booking.status.toLowerCase()}">
+                            ${booking.status}
+                        </span>
+
+                    </div>
 
                 </div>
 
+            `).join("");
 
-                <div class="booking-meta">
 
-                    <span class="status ${booking.status.toLowerCase()}">
-                        ${booking.status}
-                    </span>
+    } catch (error) {
 
-                </div>
+        console.error(error);
+
+        container.innerHTML = `
+            <div class="empty">
+
+                <h3>Unable to load bookings</h3>
+
+                <p>
+                    Please refresh the page and try again.
+                </p>
 
             </div>
-
-        `).join("");
+        `;
+    }
 }
 
 
@@ -796,6 +873,9 @@ function showToast(message, icon = "✓") {
 
     const toast =
         document.getElementById("toast");
+
+    if (!toast) return;
+
 
     document.getElementById("toastText").textContent =
         message;
@@ -836,7 +916,7 @@ function getInitial(name) {
 
 function escapeHTML(value) {
 
-    return String(value)
+    return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -849,6 +929,6 @@ function escapeHTML(value) {
 // INITIAL LOAD
 // =====================================================
 
-loadGigs();
-loadCreatorBookings();
-loadClientBookings();
+renderGigs();
+renderDashboard();
+renderMyBookings();
