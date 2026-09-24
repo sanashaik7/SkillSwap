@@ -3,7 +3,7 @@
 // Connected to Node.js + SQLite Backend
 // =====================================================
 
-const API = "http://localhost:5000/api";
+const API = "https://skillswap-backend-9i4k.onrender.com/api";
 
 let gigs = [];
 let bookings = [];

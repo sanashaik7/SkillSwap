@@ -2,18 +2,37 @@
 
 ## DP1 — Rejection
 
-When a creator declines a booking, the client can see the booking in **My Bookings** with the status **Declined**.
+### Decision
+When a creator declines a booking, the client can see the booking status as **Declined** and can browse other available gigs.
 
-The client can then look for another available gig and submit a new booking request. We chose this because a declined request should not leave the client without feedback, and the client should be able to continue using the marketplace.
+### Why?
+This gives the client clear feedback about the booking and allows them to find another creator without confusion.
+
+---
 
 ## DP2 — Double Booking
 
-A gig cannot accept another booking while it already has a **Pending** booking.
+### Decision
+A gig cannot accept another booking while an existing booking is still **Pending**.
 
-If another client tries to book the same gig while a Pending booking exists, the API rejects the request and returns a clear message explaining that the gig already has a pending booking. This prevents multiple clients from competing for the same currently pending gig.
+### Why?
+This prevents conflicting booking requests and helps creators manage their availability clearly.
+
+---
 
 ## DP3 — Discovery
 
-Gigs are displayed with the **newest gigs first**.
+### Decision
+Gigs are ranked **newest first**.
 
-We chose this so newly posted creator services receive immediate visibility while still keeping the marketplace simple and predictable for users.
+### Why?
+This keeps the marketplace fresh and gives newly posted gigs visibility instead of allowing older listings to permanently dominate discovery.
+
+---
+
+## Hackathon Details
+
+**Hackathon:** Azisly.ai Hackathon  
+**Track:** Track 2 — Climate Tech  
+**Hackathon ID:** AZIS-MWAMW2  
+**Team:** Shaikthabasum2006's Team
