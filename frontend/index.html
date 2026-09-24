@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SkillSwap — Creator Marketplace</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- NAVIGATION -->
+<header class="navbar">
+    <div class="brand" onclick="showPage('marketplace')">
+        <div class="brand-icon">S</div>
+        <span>Skill<span>Swap</span></span>
+    </div>
+
+    <nav>
+        <button class="nav-link active" data-page="marketplace" onclick="showPage('marketplace')">
+            Marketplace
+        </button>
+
+        <button class="nav-link" data-page="post" onclick="showPage('post')">
+            Post a Gig
+        </button>
+
+        <button class="nav-link" data-page="dashboard" onclick="showPage('dashboard')">
+            Creator Dashboard
+        </button>
+
+        <button class="nav-link" data-page="bookings" onclick="showPage('bookings')">
+            My Bookings
+        </button>
+    </nav>
+
+    <button class="nav-cta" onclick="showPage('post')">
+        + Post a Gig
+    </button>
+</header>
+
+
+<main>
+
+<!-- MARKETPLACE -->
+<section id="marketplace" class="page active-page">
+
+    <div class="hero">
+
+        <div class="hero-content">
+
+            <div class="eyebrow">
+                <span class="pulse"></span>
+                CREATOR ECONOMY
+            </div>
+
+            <h1>
+                Your skills.
+                <span>Your opportunity.</span>
+            </h1>
+
+            <p>
+                Discover talented creators and book the skills you need.
+                Or turn what you're good at into your next opportunity.
+            </p>
+
+            <div class="hero-actions">
+                <button class="primary-btn" onclick="document.getElementById('gigGrid').scrollIntoView({behavior:'smooth'})">
+                    Explore gigs
+                    <span>→</span>
+                </button>
+
+                <button class="secondary-btn" onclick="showPage('post')">
+                    Start earning
+                </button>
+            </div>
+
+        </div>
+
+        <div class="hero-visual">
+
+            <div class="floating-card card-one">
+                <div class="mini-icon purple">✦</div>
+                <div>
+                    <strong>Creative skills</strong>
+                    <small>Find your next creator</small>
+                </div>
+            </div>
+
+            <div class="orb">
+                <div class="orb-inner">
+                    <span>SS</span>
+                </div>
+            </div>
+
+            <div class="floating-card card-two">
+                <div class="mini-avatar">A</div>
+                <div>
+                    <strong>New booking</strong>
+                    <small>₹800 · Video Editing</small>
+                </div>
+                <span class="check">✓</span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- MARKETPLACE HEADER -->
+    <div class="section-header" id="gigs">
+
+        <div>
+            <div class="section-label">EXPLORE</div>
+            <h2>Find the right skill</h2>
+            <p>Browse services from talented young creators.</p>
+        </div>
+
+        <div class="gig-count">
+            <strong id="gigCount">0</strong> gigs available
+        </div>
+
+    </div>
+
+
+    <!-- SEARCH -->
+    <div class="search-panel">
+
+        <div class="search-box">
+            <span>⌕</span>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search for a skill, service or creator..."
+                oninput="renderGigs()"
+            >
+        </div>
+
+        <select id="categoryFilter" onchange="renderGigs()">
+            <option value="All">All categories</option>
+            <option value="Design">Design</option>
+            <option value="Video Editing">Video Editing</option>
+            <option value="Writing">Writing</option>
+            <option value="Photography">Photography</option>
+            <option value="Tutoring">Tutoring</option>
+            <option value="Music">Music</option>
+            <option value="Other">Other</option>
+        </select>
+
+    </div>
+
+
+    <div id="gigGrid" class="gig-grid"></div>
+
+</section>
+
+
+<!-- POST GIG -->
+<section id="post" class="page">
+
+    <div class="form-page">
+
+        <div class="form-intro">
+            <div class="section-label">FOR CREATORS</div>
+
+            <h2>Turn your skill into an opportunity.</h2>
+
+            <p>
+                Create a gig, showcase what you do, and let clients discover
+                your work.
+            </p>
+
+            <div class="creator-tip">
+                <span>✦</span>
+                <div>
+                    <strong>Tip</strong>
+                    <p>Clear titles and descriptions help clients understand your service quickly.</p>
+                </div>
+            </div>
+        </div>
+
+
+        <form id="gigForm" class="glass-form">
+
+            <div class="form-title">
+                <span class="form-number">01</span>
+                <div>
+                    <h3>Create your gig</h3>
+                    <p>Tell clients what you can do.</p>
+                </div>
+            </div>
+
+
+            <label>
+                Gig title
+                <input
+                    id="gigTitle"
+                    type="text"
+                    placeholder="e.g. Instagram Reel Editing"
+                    required
+                >
+            </label>
+
+
+            <div class="two-columns">
+
+                <label>
+                    Category
+
+                    <select id="gigCategory" required>
+                        <option value="">Select category</option>
+                        <option>Design</option>
+                        <option>Video Editing</option>
+                        <option>Writing</option>
+                        <option>Photography</option>
+                        <option>Tutoring</option>
+                        <option>Music</option>
+                        <option>Other</option>
+                    </select>
+
+                </label>
+
+
+                <label>
+                    Rate (₹)
+
+                    <input
+                        id="gigRate"
+                        type="number"
+                        min="1"
+                        placeholder="500"
+                        required
+                    >
+
+                </label>
+
+            </div>
+
+
+            <label>
+                Description
+
+                <textarea
+                    id="gigDescription"
+                    rows="5"
+                    placeholder="Describe what the client will receive..."
+                    required
+                ></textarea>
+
+            </label>
+
+
+            <label>
+                Creator name
+
+                <input
+                    id="creatorName"
+                    type="text"
+                    placeholder="Your name"
+                    required
+                >
+
+            </label>
+
+
+            <button class="primary-btn full-btn" type="submit">
+                Publish gig →
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<!-- CREATOR DASHBOARD -->
+<section id="dashboard" class="page">
+
+    <div class="dashboard-header">
+
+        <div>
+            <div class="section-label">CREATOR SPACE</div>
+            <h2>Creator Dashboard</h2>
+            <p>Manage your incoming booking requests.</p>
+        </div>
+
+    </div>
+
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <span>Pending</span>
+            <strong id="pendingCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Accepted</span>
+            <strong id="acceptedCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Declined</span>
+            <strong id="declinedCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Total bookings</span>
+            <strong id="totalBookingCount">0</strong>
+        </div>
+
+    </div>
+
+
+    <div id="dashboardBookings" class="booking-list"></div>
+
+</section>
+
+
+<!-- MY BOOKINGS -->
+<section id="bookings" class="page">
+
+    <div class="dashboard-header">
+
+        <div>
+            <div class="section-label">CLIENT SPACE</div>
+            <h2>My Bookings</h2>
+            <p>Track your requests and their current status.</p>
+        </div>
+
+    </div>
+
+    <div id="myBookings" class="booking-list"></div>
+
+</section>
+
+</main>
+
+
+<!-- BOOKING MODAL -->
+<div id="bookingModal" class="modal">
+
+    <div class="modal-box">
+
+        <button class="close-btn" onclick="closeModal()">×</button>
+
+        <div class="modal-icon">↗</div>
+
+        <div class="section-label">BOOK THIS GIG</div>
+
+        <h2 id="modalGigTitle">Book a gig</h2>
+
+        <p id="modalGigInfo"></p>
+
+
+        <form id="bookingForm">
+
+            <input type="hidden" id="bookingGigId">
+
+            <label>
+                Your name
+                <input
+                    id="clientName"
+                    type="text"
+                    placeholder="Enter your name"
+                    required
+                >
+            </label>
+
+            <label>
+                Message to creator
+
+                <textarea
+                    id="clientMessage"
+                    rows="4"
+                    placeholder="Tell the creator what you need..."
+                ></textarea>
+
+            </label>
+
+            <button class="primary-btn full-btn" type="submit">
+                Confirm booking
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- TOAST -->
+<div id="toast" class="toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastText">Success</span>
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
